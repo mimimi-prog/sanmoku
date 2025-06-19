@@ -1,0 +1,93 @@
+const canvas = document.getElementById('gridCanvas');
+const ctx = canvas.getContext('2d');
+
+const size = canvas.width;
+const cellCount = 3;
+const cellSize = size / cellCount;
+
+let board = Array(cellCount).fill(null).map(() => Array(cellCount).fill(null));
+let currentPlayer = '〇';
+let gameOver = false;
+
+// 線を描画（マス目）
+function drawGrid() {
+  ctx.clearRect(0, 0, size, size);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+
+  for (let i = 1; i < cellCount; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * cellSize, 0);
+    ctx.lineTo(i * cellSize, size);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, i * cellSize);
+    ctx.lineTo(size, i * cellSize);
+    ctx.stroke();
+  }
+
+  drawMarks();
+}
+
+// 〇×の描画
+function drawMarks() {
+  ctx.font = `${cellSize * 0.6}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let y = 0; y < cellCount; y++) {
+    for (let x = 0; x < cellCount; x++) {
+      const mark = board[y][x];
+      if (mark) {
+        ctx.fillText(mark, x * cellSize + cellSize / 2, y * cellSize + cellSize / 2);
+      }
+    }
+  }
+}
+
+// 勝者のチェック
+function checkWinner() {
+  // 横・縦
+  for (let i = 0; i < cellCount; i++) {
+    if (
+      board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2] ||
+      board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]
+    ) {
+      return board[i][i]; // 適当な位置のマークを返す
+    }
+  }
+  // 斜め
+  if (
+    board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]
+  ) return board[0][0];
+  if (
+    board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]
+  ) return board[0][2];
+
+  return null;
+}
+
+// クリック処理
+canvas.addEventListener('click', (e) => {
+  if (gameOver) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / cellSize);
+  const y = Math.floor((e.clientY - rect.top) / cellSize);
+
+  if (board[y][x] === null) {
+    board[y][x] = currentPlayer;
+    const winner = checkWinner();
+    if (winner) {
+      gameOver = true;
+      setTimeout(() => alert(`${winner} の勝ち！`), 10);
+    } else {
+      currentPlayer = currentPlayer === '〇' ? '×' : '〇';
+    }
+    drawGrid();
+  }
+});
+
+// 初期描画
+drawGrid();
